@@ -868,6 +868,13 @@
         #devPanelBody[data-page="packs"] .dev-section:not([data-dev-page="packs"]) { display: none !important; }
         #devPanelBody[data-page="rewards"] .dev-section:not([data-dev-page="rewards"]) { display: none !important; }
         #devPanelBody[data-page="badges"] .dev-section:not([data-dev-page="badges"]) { display: none !important; }
+        #devPanelBody[data-page="server"] .dev-section:not([data-dev-page="server"]) { display: none !important; }
+        .dev-srv-box { width: 100%; display: flex; flex-direction: column; gap: 8px; align-items: stretch; text-align: left; }
+        .dev-srv-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+        .dev-srv-url { flex: 1 1 260px; min-width: 0; background: #222; color: #fff; border: 1px solid #555; border-radius: 6px; padding: 8px 10px; font-size: 13px; font-family: monospace; }
+        .dev-srv-url:focus { outline: none; border-color: #ffcc00; }
+        .dev-srv-cur { font-size: 12px; color: #9fe; word-break: break-all; line-height: 1.5; }
+        .dev-srv-res { font-size: 12px; color: #ffcc00; white-space: pre-line; line-height: 1.5; word-break: break-all; }
         .dev-section-label {
             font-size: 11px;
             font-weight: bold;
@@ -4304,7 +4311,7 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
         let envelopeVisionActive = false;
         let devForceGodPack = false; // โหมดผู้พัฒนา: บังคับให้ทุกซองที่เปิดเป็น GOD PACK 100%
         let devCurPage = ""; // โหมดผู้พัฒนา: หน้าเมนูที่เปิดอยู่ ("" = หน้าเมนูหลัก)
-        const DEV_PAGE_TITLES = {"general": "⚙️ ทั่วไป", "players": "👥 ผู้เล่น & ข้อมูล", "images": "🖼️ รูปภาพ", "cards": "🆕 สร้างการ์ด", "raid": "🐉 Raid", "packs": "🎁 ซอง & กล่อง", "badges": "🏷️ ป้ายระดับ", "rewards": "🏆 รางวัลกาชา"};
+        const DEV_PAGE_TITLES = {"general": "⚙️ ทั่วไป", "players": "👥 ผู้เล่น & ข้อมูล", "images": "🖼️ รูปภาพ", "cards": "🆕 สร้างการ์ด", "raid": "🐉 Raid", "packs": "🎁 ซอง & กล่อง", "badges": "🏷️ ป้ายระดับ", "rewards": "🏆 รางวัลกาชา", "server": "🌐 ตั้งค่าเซิร์ฟเวอร์หลัก"};
         let devPanelCollapsed = false; // โหมดผู้พัฒนา: สถานะพับ/กางแผงควบคุม (ผลของโหมดผู้พัฒนายังทำงานอยู่แม้พับจอ)
 
         // ===== New systems state =====
@@ -7054,7 +7061,7 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
                         <button class="btn btn-danger" style="font-size: 12px; padding: 5px 10px;" onclick="logoutDevMode()">🚪 ล็อกเอาท์</button>
                     </div>
                     <div id="devPanelBody" data-page="${devCurPage}">
-                        <div class="dev-menu" id="devMenu"><button type="button" class="dev-menu-btn" onclick="devOpenPage('general')"><span class="dev-menu-ic">⚙️</span><span>ทั่วไป</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('players')"><span class="dev-menu-ic">👥</span><span>ผู้เล่น & ข้อมูล</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('images')"><span class="dev-menu-ic">🖼️</span><span>รูปภาพ</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('cards')"><span class="dev-menu-ic">🆕</span><span>สร้างการ์ด</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('raid')"><span class="dev-menu-ic">🐉</span><span>Raid</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('packs')"><span class="dev-menu-ic">🎁</span><span>ซอง & กล่อง</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('badges')"><span class="dev-menu-ic">🏷️</span><span>ป้ายระดับ</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('rewards')"><span class="dev-menu-ic">🏆</span><span>รางวัลกาชา</span></button></div>
+                        <div class="dev-menu" id="devMenu"><button type="button" class="dev-menu-btn" onclick="devOpenPage('general')"><span class="dev-menu-ic">⚙️</span><span>ทั่วไป</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('players')"><span class="dev-menu-ic">👥</span><span>ผู้เล่น & ข้อมูล</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('images')"><span class="dev-menu-ic">🖼️</span><span>รูปภาพ</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('cards')"><span class="dev-menu-ic">🆕</span><span>สร้างการ์ด</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('raid')"><span class="dev-menu-ic">🐉</span><span>Raid</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('packs')"><span class="dev-menu-ic">🎁</span><span>ซอง & กล่อง</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('badges')"><span class="dev-menu-ic">🏷️</span><span>ป้ายระดับ</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('rewards')"><span class="dev-menu-ic">🏆</span><span>รางวัลกาชา</span></button><button type="button" class="dev-menu-btn" onclick="devOpenPage('server')"><span class="dev-menu-ic">🌐</span><span>เซิร์ฟเวอร์หลัก</span></button></div>
                         <div class="dev-pagebar"><button type="button" class="btn btn-cheat" style="font-size:12px; padding:5px 12px;" onclick="devOpenPage('')">◀ เมนู</button><span id="devPageTitle" class="dev-page-title">${DEV_PAGE_TITLES[devCurPage] || ''}</span></div>
                         
                         <div class="dev-section" data-dev-page="general">
@@ -7280,10 +7287,148 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
                             <select id="devGachaRewardSelect3" class="cheat-input" style="background: #222; width: 150px; font-size: 11px; padding: 3px;"></select>
                             <button class="btn btn-premium" style="font-size: 11px; padding: 3px 6px;" onclick="saveDevGachaReward(3)">💾 บันทึก</button>
                         </div>
+                        <div class="dev-section" data-dev-page="server">
+                            <div class="dev-srv-box">
+                                <span class="dev-section-label">🌐 ตั้งค่าเซิร์ฟเวอร์หลัก</span>
+                                <div class="dev-srv-cur" id="devSrvCurrent"></div>
+                                <div class="dev-srv-row">
+                                    <input type="text" id="devSrvInput" class="dev-srv-url" placeholder="https://ชื่อแอป.onrender.com/api" value="${String(typeof API_BASE === 'string' ? API_BASE : '').replace(/"/g, '&quot;')}" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter'){devApplyServerUrl();}">
+                                </div>
+                                <label class="dev-srv-row" style="font-size:12px; color:#ddd; cursor:pointer;"><input type="checkbox" id="devSrvBroadcast" checked> 🌍 ใช้กับผู้เล่นทุกคน (บันทึกลงเซิร์ฟเวอร์ — ต้องล็อกอินแอดมิน)</label>
+                                <div class="dev-srv-cur" id="devSrvRemote" style="color:#ccc;"></div>
+                                <div class="dev-srv-row">
+                                    <button type="button" class="btn btn-premium" style="font-size:12px; padding:6px 12px;" onclick="devApplyServerUrl()">✅ ใช้ URL นี้ทันที</button>
+                                    <button type="button" class="btn btn-cheat" style="font-size:12px; padding:6px 12px;" onclick="devTestServerUrl()">📡 ทดสอบการเชื่อมต่อ</button>
+                                    <button type="button" class="btn btn-cheat" id="devSrvPrevBtn" style="font-size:12px; padding:6px 12px;" onclick="devRevertServerUrl()">↩️ ย้อนกลับ URL ก่อนหน้า</button>
+                                    <button type="button" class="btn btn-danger" style="font-size:12px; padding:6px 12px;" onclick="devResetServerUrl()">↺ คืนค่าเริ่มต้น</button>
+                                    <button type="button" class="btn btn-cheat" style="font-size:12px; padding:6px 12px;" onclick="devClearRemoteServer()">🧹 ล้างค่าที่ตั้งบนเซิร์ฟเวอร์</button>
+                                </div>
+                                <div class="dev-srv-res" id="devSrvResult"></div>
+                                <div style="font-size:10px; color:#888; line-height:1.5;">พิมพ์แค่โดเมนก็ได้ (ระบบเติม https:// และ /api ให้เอง) · กด “ใช้ URL นี้ทันที” แล้วเกมจะสลับไปใช้เซิร์ฟเวอร์ใหม่ทันทีโดยไม่ต้องรีโหลด · ถ้าติ๊ก “ใช้กับผู้เล่นทุกคน” ผู้เล่นที่เปิดเกมอยู่จะถูกย้ายตามภายในไม่กี่วินาที (เฉพาะเมื่อเซิร์ฟเวอร์ใหม่ตอบได้) · บัญชีผู้เล่นแยกตามเซิร์ฟเวอร์ ถ้า URL ใหม่ไม่รู้จักเซสชันเดิมจะให้ล็อกอินใหม่</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
         }
+
+        // ===== Dev → 🌐 ตั้งค่าเซิร์ฟเวอร์หลัก: เปลี่ยน URL แล้วใช้ทันที (ไม่รีโหลดหน้า) =====
+        let devSrvPrevUrl = null;
+        function devNormalizeApiUrl(raw) {
+            let v = String(raw || '').trim();
+            if (!v) return '';
+            if (!/^https?:\/\//i.test(v)) v = (/^(localhost|127\.|192\.168\.|10\.)/i.test(v) ? 'http://' : 'https://') + v;
+            v = v.replace(/[?#].*$/, '').replace(/\/+$/, '');
+            if (!/\/api$/i.test(v)) v += '/api';
+            if (!/^https?:\/\/[^\/\s]+\/api$/i.test(v)) return '';
+            try { if (!new URL(v).hostname) return ''; } catch (e) { return ''; }
+            return v;
+        }
+        function devSrvPaint() {
+            const cur = document.getElementById('devSrvCurrent');
+            if (cur) cur.textContent = 'เซิร์ฟเวอร์ที่ใช้อยู่ตอนนี้: ' + API_BASE + (API_BASE === DEFAULT_API_BASE ? '  (ค่าเริ่มต้น)' : '') + ((typeof useServer === 'function' && useServer()) ? '' : '  · โหมดที่เก็บรูปตอนนี้ = ไฟล์เกม (บัญชี/ลีดเดอร์บอร์ดยังใช้ URL นี้)');
+            const inp = document.getElementById('devSrvInput');
+            if (inp && document.activeElement !== inp) inp.value = API_BASE;
+            const pb = document.getElementById('devSrvPrevBtn');
+            if (pb) { pb.disabled = !devSrvPrevUrl; pb.style.opacity = devSrvPrevUrl ? '1' : '.5'; }
+        }
+        function devSetServerUrl(url) {
+            devSrvPrevUrl = API_BASE;
+            API_BASE = url;
+            SERVER_ORIGIN = url.replace(/\/api\/?$/, '');
+            try { localStorage.setItem('imgApiBase', url); } catch (e) {}
+            syncServerReachable = true;
+            devSrvPaint();
+            // รีโหลดข้อมูลจากเซิร์ฟเวอร์ใหม่ทันที (รูปการ์ด/ซอง/หน้ากล่อง/รางวัล/การ์ดที่สร้างเอง)
+            if (typeof useServer === 'function' && useServer()) {
+                try { lastKnownSyncSnapshot = ''; } catch (e) {}
+                try { pollForSyncUpdates(); } catch (e) {}
+                try { initPackImages(); } catch (e) {}
+                try { initBoxFaceImages(); } catch (e) {}
+            }
+            try { if (typeof window.cardSyncNow === 'function') window.cardSyncNow().catch(function () {}); } catch (e) {}
+        }
+        async function devSrvLoadRemote() {
+            const el = document.getElementById('devSrvRemote'); if (!el) return;
+            try {
+                const r = await fetch(API_BASE + '/server-config', { cache: 'no-store' });
+                if (!r.ok) throw new Error(r.status);
+                const j = await r.json();
+                el.textContent = j && j.url ? '🌍 เซิร์ฟเวอร์นี้บังคับให้ผู้เล่นทุกคนใช้: ' + j.url : '🌍 เซิร์ฟเวอร์นี้ยังไม่ได้บังคับย้าย (ไม่มีค่าที่ตั้งไว้)';
+            } catch (e) { el.textContent = '🌍 อ่านค่าที่ตั้งบนเซิร์ฟเวอร์ไม่ได้ (เซิร์ฟเวอร์อาจยังไม่ได้อัปเดตเป็น index.js ตัวใหม่ หรือยังไม่ตื่น)'; }
+        }
+        // สลับเซิร์ฟเวอร์: ถ้า everyone = บันทึกลงเซิร์ฟเวอร์เดิมก่อน (ให้ผู้เล่นทุกคนตาม) แล้วค่อยสลับในเครื่องนี้ และล้างค่าบนเซิร์ฟเวอร์ใหม่กันวนกลับ
+        async function devSwitchServer(url, everyone, okMsg) {
+            const res = document.getElementById('devSrvResult');
+            if (everyone) {
+                if (res) res.textContent = 'กำลังบันทึกลงเซิร์ฟเวอร์ (มีผลกับผู้เล่นทุกคน) ...';
+                const ok = await srvCall('/server-config', 'PUT', { url: url });
+                if (!ok) {
+                    if (res) res.textContent = '❌ บันทึกลงเซิร์ฟเวอร์ไม่สำเร็จ — ต้องล็อกอินด้วยบัญชีแอดมิน และเซิร์ฟเวอร์เดิมต้องเป็น index.js ตัวใหม่ (หรือเอาติ๊ก “ใช้กับผู้เล่นทุกคน” ออกเพื่อเปลี่ยนเฉพาะเครื่องนี้)';
+                    return false;
+                }
+            }
+            devSetServerUrl(url);
+            if (everyone) { try { await apiRequest('/server-config', { method: 'PUT', auth: 'silent', body: { url: null } }); } catch (e) {} }
+            showToast(okMsg + (everyone ? ' (ผู้เล่นทุกคนจะย้ายตาม)' : ''), 'success');
+            devSrvLoadRemote();
+            devTestServerUrl();
+            return true;
+        }
+        function devSrvEveryone() { const c = document.getElementById('devSrvBroadcast'); return !c || c.checked; }
+        async function devApplyServerUrl() {
+            const inp = document.getElementById('devSrvInput');
+            const url = devNormalizeApiUrl(inp ? inp.value : '');
+            const res = document.getElementById('devSrvResult');
+            if (!url) { if (res) res.textContent = '❌ URL ไม่ถูกต้อง — ตัวอย่าง: https://ชื่อแอป.onrender.com/api'; showToast('URL ไม่ถูกต้อง', 'error'); return; }
+            if (url === API_BASE) { if (res) res.textContent = 'ℹ️ ใช้ URL นี้อยู่แล้ว'; devTestServerUrl(); return; }
+            await devSwitchServer(url, devSrvEveryone(), 'เปลี่ยนเซิร์ฟเวอร์หลักแล้ว — ใช้งานทันที');
+        }
+        function devTestServerUrl() {
+            const res = document.getElementById('devSrvResult');
+            if (res) res.textContent = 'กำลังทดสอบ ' + API_BASE + ' ...';
+            return testServerConnection('devSrvResult');
+        }
+        async function devRevertServerUrl() {
+            if (!devSrvPrevUrl) return;
+            const url = devSrvPrevUrl;
+            const ok = await devSwitchServer(url, devSrvEveryone(), 'ย้อนกลับไปใช้ URL เดิมแล้ว');
+            if (ok) { devSrvPrevUrl = null; devSrvPaint(); }
+        }
+        async function devResetServerUrl() {
+            if (API_BASE === DEFAULT_API_BASE) { showToast('ใช้ค่าเริ่มต้นอยู่แล้ว', 'success'); return; }
+            const ok = await devSwitchServer(DEFAULT_API_BASE, devSrvEveryone(), 'คืนค่าเซิร์ฟเวอร์เริ่มต้นแล้ว');
+            if (ok) { try { localStorage.removeItem('imgApiBase'); } catch (e) {} }
+        }
+        async function devClearRemoteServer() {
+            const ok = await srvCall('/server-config', 'PUT', { url: null });
+            showToast(ok ? 'ล้างค่าที่ตั้งบนเซิร์ฟเวอร์แล้ว (ไม่บังคับย้ายผู้เล่นอีก)' : 'ล้างไม่สำเร็จ', ok ? 'success' : 'error');
+            devSrvLoadRemote();
+        }
+
+        // ===== ฝั่งผู้เล่น: ถ้าเซิร์ฟเวอร์ประกาศเซิร์ฟเวอร์หลักใหม่ → ตรวจว่าตอบได้ แล้วสลับตามทันที (ไม่ต้องรีโหลด) =====
+        let mainSrvBusy = false, mainSrvLastFollow = 0;
+        async function checkMainServerRedirect() {
+            if (mainSrvBusy) return;
+            mainSrvBusy = true;
+            try {
+                const r = await fetch(API_BASE + '/server-config', { cache: 'no-store' });
+                if (!r.ok) return;
+                const j = await r.json();
+                const url = devNormalizeApiUrl(j && j.url);
+                if (!url || url === API_BASE) return;
+                if (Date.now() - mainSrvLastFollow < 30000) return;   // กันสลับวนไปมา
+                const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), 20000);
+                let alive = false;
+                try { alive = (await fetch(url + '/gacha-rewards', { cache: 'no-store', signal: ctrl.signal })).ok; } catch (e) {} finally { clearTimeout(tm); }
+                if (!alive) return;   // เซิร์ฟเวอร์ใหม่ยังตอบไม่ได้ → อยู่ที่เดิมก่อน แล้วลองใหม่รอบหน้า
+                mainSrvLastFollow = Date.now();
+                devSetServerUrl(url);
+                try { showToast('ย้ายไปใช้เซิร์ฟเวอร์หลักใหม่แล้ว', 'success'); } catch (e) {}
+            } catch (e) {} finally { mainSrvBusy = false; }
+        }
+        setTimeout(checkMainServerRedirect, 4000);
+        setInterval(checkMainServerRedirect, 15000);
 
         function devOpenPage(key) {
             devCurPage = key || "";
@@ -7295,6 +7440,7 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
             }
             const bar = document.getElementById("cheatBarContainer");
             if (bar) bar.scrollTop = 0;
+            if (devCurPage === "server") { try { devSrvPaint(); devSrvLoadRemote(); } catch (e) {} }
         }
 
         function toggleDevPanelCollapse() {
@@ -7564,8 +7710,8 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
                     : 'โหมดปัจจุบัน: ไฟล์เกม — รูปเก็บในไฟล์ HTML นี้ (โหมดเซิร์ฟเวอร์ใช้กับรูปการ์ด/ซอง/หน้ากล่อง/รางวัล)';
             }
         }
-        async function testServerConnection() {
-            const out = document.getElementById("uiServerTestResult");
+        async function testServerConnection(outId) {
+            const out = document.getElementById(typeof outId === "string" ? outId : "uiServerTestResult");
             if (!out) return;
             out.style.whiteSpace = 'pre-line';
             out.textContent = 'กำลังเชื่อมต่อ... (เซิร์ฟเวอร์ฟรีที่หลับอยู่อาจใช้เวลาปลุก 30-60 วินาที)';
