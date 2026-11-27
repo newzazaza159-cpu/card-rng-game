@@ -4004,10 +4004,12 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
         let imageStoreMode = 'server';
         // กู้คืนกรณีตั้ง URL ผิดแล้วเข้าเกมไม่ได้: เปิดหน้าเว็บโดยต่อท้าย ?resetserver เช่น https://.../?resetserver → กลับไปใช้เซิร์ฟเวอร์เริ่มต้น
         try { if (/[?&#]resetserver/i.test(location.search + location.hash)) { localStorage.removeItem('imgApiBase'); history.replaceState(null, '', location.pathname); } } catch (e) {}
-        // ย้ายค่าเก่า (ครั้งเดียวต่อเครื่อง): ถ้าเครื่องนี้เคยเก็บ URL เซิร์ฟเวอร์เดิมไว้ ให้ทิ้ง เพื่อใช้ค่าเริ่มต้นใหม่
-        try { if (!localStorage.getItem('imgApiBaseMig1')) { localStorage.setItem('imgApiBaseMig1', '1'); if (localStorage.getItem('imgApiBase') === 'https://card-rng.onrender.com/api') localStorage.removeItem('imgApiBase'); } } catch (e) {}
+        // URL เซิร์ฟเวอร์เก่าที่เลิกใช้แล้ว: ถูกบล็อกทุกทาง (ค่าที่ค้างในเครื่อง / ค่าที่ตั้งเอง / ค่าที่เซิร์ฟเวอร์ประกาศย้าย) → ใช้ค่าเริ่มต้นแทน
+        function isBlockedApiUrl(u) { return /\/\/card-rng\.onrender\.com(\/|$)/i.test(String(u || '')); }
+        try { if (isBlockedApiUrl(localStorage.getItem('imgApiBase'))) localStorage.removeItem('imgApiBase'); } catch (e) {}
         try {
             API_BASE = localStorage.getItem('imgApiBase') || DEFAULT_API_BASE;
+            if (isBlockedApiUrl(API_BASE)) API_BASE = DEFAULT_API_BASE;
             imageStoreMode = localStorage.getItem('imgStoreMode') === 'file' ? 'file' : 'server';   // ค่าเริ่มต้น = เซิร์ฟเวอร์ (ถ้าไม่เคยเลือกโหมดไฟล์เกมเอง)
         } catch (e) {}
         let SERVER_ORIGIN = API_BASE.replace(/\/api\/?$/, "");
@@ -7317,6 +7319,7 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
             if (!/\/api$/i.test(v)) v += '/api';
             if (!/^https?:\/\/[^\/\s]+\/api$/i.test(v)) return '';
             try { if (!new URL(v).hostname) return ''; } catch (e) { return ''; }
+            if (isBlockedApiUrl(v)) return '';
             return v;
         }
         function devSrvPaint() {
@@ -7408,7 +7411,7 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
             const inp = document.getElementById('devSrvInput');
             const url = devNormalizeApiUrl(inp ? inp.value : '');
             const res = document.getElementById('devSrvResult');
-            if (!url) { if (res) res.textContent = '❌ URL ไม่ถูกต้อง — ตัวอย่าง: https://ชื่อแอป.onrender.com/api'; showToast('URL ไม่ถูกต้อง', 'error'); return; }
+            if (!url) { if (res) res.textContent = '❌ URL ไม่ถูกต้อง หรือเป็น URL เก่าที่ถูกบล็อกไว้ — ตัวอย่าง: https://ชื่อแอป.onrender.com/api'; showToast('URL ไม่ถูกต้อง', 'error'); return; }
             if (url === API_BASE) { if (res) res.textContent = 'ℹ️ ใช้ URL นี้อยู่แล้ว'; devTestServerUrl(); return; }
             await devSwitchServer(url, devSrvEveryone(), 'เปลี่ยนเซิร์ฟเวอร์หลักแล้ว — ใช้งานทันที');
         }
