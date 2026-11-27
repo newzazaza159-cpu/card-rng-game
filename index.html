@@ -4042,19 +4042,22 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
         }
         async function apiRequest(path, options = {}) {
             const headers = { 'Content-Type': 'application/json' };
-            if (options.auth === 'silent') {
-                if (!adminKey) throw new Error('no-admin-key-silent');
-                headers['x-admin-key'] = adminKey;
-            } else if (options.auth) {
-                headers['x-admin-key'] = getAdminKey();
+            if (options.auth) {
+                // สิทธิ์แอดมินผูกกับบัญชีที่ล็อกอินอยู่ (ไม่ต้องกรอกรหัสแอดมินแล้ว)
+                let tok = null;
+                try { const pf = CardProfiles.current(); tok = (pf && pf.cloud && pf.cloud.token) || null; } catch (e) {}
+                if (!tok) {
+                    if (options.auth === 'silent') throw new Error('no-admin-key-silent');
+                    throw new Error('ต้องล็อกอินด้วยบัญชีแอดมินก่อน');
+                }
+                headers['Authorization'] = 'Bearer ' + tok;
             }
             const res = await fetch(API_BASE + path, {
                 method: options.method || 'GET', headers,
                 body: options.body !== undefined ? JSON.stringify(options.body) : undefined
             });
-            if (res.status === 401) {
-                adminKey = ''; try { localStorage.removeItem('gameAdminKey'); } catch (e) {}
-                throw new Error('รหัสผ่านแอดมินไม่ถูกต้อง หรือยังไม่ได้กรอก');
+            if (options.auth && (res.status === 401 || res.status === 403)) {
+                throw new Error(res.status === 403 ? 'บัญชีนี้ไม่มีสิทธิ์แอดมิน (ต้องล็อกอินด้วยบัญชีแอดมิน)' : 'เซสชันหมดอายุหรือยังไม่ได้ล็อกอิน กรุณาล็อกอินด้วยบัญชีแอดมินใหม่');
             }
             if (!res.ok) {
                 let msg = 'เซิร์ฟเวอร์ตอบกลับผิดพลาด (' + res.status + ')';
@@ -7175,7 +7178,7 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
                         </div>
                         <div class="dev-section" data-dev-page="raid" style="display:block;">
                             <span class="dev-section-label">⚔ ตั้งค่าการ์ด Raid — สาย · ระยะโจมตี · สกิล (แตะรูปการ์ด)</span>
-                            <div class="dvr-sync"><span id="raidCfgStatus" style="color:#9ab;">ค่าที่ตั้งจะบันทึกขึ้นเซิร์ฟเวอร์อัตโนมัติ (ใช้รหัสแอดมิน)</span><button type="button" class="dvr-btn" onclick="raidCfgPush(true)">⬆ อัปโหลดทั้งหมดขึ้นเซิร์ฟเวอร์</button><button type="button" class="dvr-btn" onclick="raidCfgPull()">⬇ ดึงจากเซิร์ฟเวอร์</button></div>
+                            <div class="dvr-sync"><span id="raidCfgStatus" style="color:#9ab;">ค่าที่ตั้งจะบันทึกขึ้นเซิร์ฟเวอร์อัตโนมัติ (ต้องล็อกอินด้วยบัญชีแอดมิน)</span><button type="button" class="dvr-btn" onclick="raidCfgPush(true)">⬆ อัปโหลดทั้งหมดขึ้นเซิร์ฟเวอร์</button><button type="button" class="dvr-btn" onclick="raidCfgPull()">⬇ ดึงจากเซิร์ฟเวอร์</button></div>
                             <input type="text" id="atkSheetSearch" class="cheat-input" placeholder="🔍 ค้นหาชื่อการ์ด..." oninput="renderAtkSheet()" style="background:#222; font-size:12px; padding:4px; width:100%; box-sizing:border-box; margin-bottom:5px;">
                             <div id="atkSheetBody" class="dvr-grid"></div>
                             <div id="atkEditor" class="dvr-editor"></div>
@@ -9611,7 +9614,7 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
                 if (ok) { delete local[id]; cbWriteLocal(local); return ' และบันทึกขึ้นเซิร์ฟเวอร์แล้ว'; }
                 if (def) local[id] = def; else delete local[id];
                 cbWriteLocal(local);
-                return ' (เซิร์ฟเวอร์ยังไม่รองรับกล่องที่สร้างเอง/ยังไม่ได้ใส่รหัสแอดมิน — เก็บไว้ในเบราว์เซอร์เครื่องนี้แทน)';
+                return ' (เซิร์ฟเวอร์ยังไม่รองรับกล่องที่สร้างเอง/ไม่ได้ล็อกอินด้วยบัญชีแอดมิน — เก็บไว้ในเบราว์เซอร์เครื่องนี้แทน)';
             }
             await filePromise;
             EMB.customBoxes = EMB.customBoxes || {};
