@@ -2893,23 +2893,10 @@
 
     <button class="ui-settings-btn" id="uiSettingsBtn" onclick="toggleUiThemePanel()" title="ตั้งค่า">⚙️</button>
     <button class="ui-settings-btn ui-profile-btn" id="uiProfileBtn" onclick="openProfileModal()" title="โปรไฟล์ผู้เล่น">👤</button>
-    <button class="ui-settings-btn ui-server-btn" id="uiServerBtn" onclick="toggleServerPanel()" title="ตั้งค่าที่เก็บรูป / เซิร์ฟเวอร์">🌐</button>
+    <button class="ui-settings-btn ui-server-btn" id="uiServerBtn" onclick="toggleServerPanel()" title="เซิร์ฟเวอร์ที่ใช้อยู่">🌐</button>
     <div class="ui-theme-panel" id="uiServerPanel">
-        <div class="ui-theme-panel-title">🌐 ที่เก็บรูป / เซิร์ฟเวอร์</div>
-        <button class="ui-theme-option" id="serverModeFileBtn" onclick="setImageStoreMode('file')">
-            <span style="font-size:16px;">📁</span><span>ไฟล์เกม (HTML นี้)</span>
-        </button>
-        <button class="ui-theme-option" id="serverModeServerBtn" onclick="setImageStoreMode('server')">
-            <span style="font-size:16px;">☁️</span><span>เซิร์ฟเวอร์กลาง</span>
-        </button>
-        <button class="ui-theme-option" onclick="changeServerUrl()" style="margin-top:6px;">
-            <span style="font-size:16px;">🌐</span><span>ตั้ง URL เซิร์ฟเวอร์</span>
-        </button>
-        <button class="ui-theme-option" onclick="testServerConnection()">
-            <span style="font-size:16px;">📡</span><span>ทดสอบการเชื่อมต่อเซิร์ฟเวอร์</span>
-        </button>
-        <div class="ui-server-info" id="uiServerInfo"></div>
-        <div class="ui-server-info" id="uiServerTestResult" style="color:#ffcc00;"></div>
+        <div class="ui-theme-panel-title">🌐 เซิร์ฟเวอร์ที่ใช้อยู่</div>
+        <div class="ui-server-info" id="uiServerInfo" style="margin-top:8px;"></div>
     </div>
     <div class="ui-theme-panel" id="uiThemePanel">
         <div class="ui-theme-panel-title">🎨 เปลี่ยนธีมพื้นหลัง UI</div>
@@ -4017,6 +4004,8 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
         let imageStoreMode = 'server';
         // กู้คืนกรณีตั้ง URL ผิดแล้วเข้าเกมไม่ได้: เปิดหน้าเว็บโดยต่อท้าย ?resetserver เช่น https://.../?resetserver → กลับไปใช้เซิร์ฟเวอร์เริ่มต้น
         try { if (/[?&#]resetserver/i.test(location.search + location.hash)) { localStorage.removeItem('imgApiBase'); history.replaceState(null, '', location.pathname); } } catch (e) {}
+        // ย้ายค่าเก่า (ครั้งเดียวต่อเครื่อง): ถ้าเครื่องนี้เคยเก็บ URL เซิร์ฟเวอร์เดิมไว้ ให้ทิ้ง เพื่อใช้ค่าเริ่มต้นใหม่
+        try { if (!localStorage.getItem('imgApiBaseMig1')) { localStorage.setItem('imgApiBaseMig1', '1'); if (localStorage.getItem('imgApiBase') === 'https://card-rng.onrender.com/api') localStorage.removeItem('imgApiBase'); } } catch (e) {}
         try {
             API_BASE = localStorage.getItem('imgApiBase') || DEFAULT_API_BASE;
             imageStoreMode = localStorage.getItem('imgStoreMode') === 'file' ? 'file' : 'server';   // ค่าเริ่มต้น = เซิร์ฟเวอร์ (ถ้าไม่เคยเลือกโหมดไฟล์เกมเอง)
@@ -7008,7 +6997,7 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
         const DEV_AUTOCLEAN_FLAG = 'devAutoCleanOn';
         function devAutoCleanKeepKeys() {
             const s = devStorageProtectedKeys();
-            ['uiTheme', 'uiThemeDefaultVer', 'uiBtnStyle', 'imgStoreMode', 'imgApiBase', 'gameAdminKey', 'cardRngBoxBuyMode', 'cardRngAutoRefillMode', DEV_AUTOCLEAN_FLAG].forEach(k => s.add(k));
+            ['uiTheme', 'uiThemeDefaultVer', 'uiBtnStyle', 'imgStoreMode', 'imgApiBase', 'imgApiBaseMig1', 'gameAdminKey', 'cardRngBoxBuyMode', 'cardRngAutoRefillMode', DEV_AUTOCLEAN_FLAG].forEach(k => s.add(k));
             return s;
         }
         const devAutoClean = { on: false, next: 0, lastAt: 0, lastN: 0, timer: null };
@@ -7383,9 +7372,18 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
             }
             if (everyone) {
                 if (res) res.textContent = 'กำลังบันทึกลงเซิร์ฟเวอร์ (มีผลกับผู้เล่นทุกคน) ...';
-                const ok = await srvCall('/server-config', 'PUT', { url: url });
-                if (!ok) {
-                    if (res) res.textContent = '❌ บันทึกลงเซิร์ฟเวอร์ไม่สำเร็จ — ต้องล็อกอินด้วยบัญชีแอดมิน และเซิร์ฟเวอร์เดิมต้องเป็น index.js ตัวใหม่ (หรือเอาติ๊ก “ใช้กับผู้เล่นทุกคน” ออกเพื่อเปลี่ยนเฉพาะเครื่องนี้)';
+                try {
+                    await apiRequest('/server-config', { method: 'PUT', auth: true, body: { url: url } });
+                } catch (err) {
+                    const msg = (err && err.message) || String(err);
+                    const acct = devSrvAcctKey();
+                    if (res) res.textContent = '❌ บันทึกลงเซิร์ฟเวอร์ไม่สำเร็จ: ' + msg
+                        + '\nเซิร์ฟเวอร์ที่ส่งไป: ' + API_BASE
+                        + '\nบัญชีที่ล็อกอินอยู่ (ชื่อที่เซิร์ฟเวอร์เห็น): ' + (acct ? '"' + acct + '"' : 'ไม่พบ — ยังไม่ได้ล็อกอิน')
+                        + '\n→ ต้องมีชื่อนี้ใน ADMIN_ACCOUNTS ของเซิร์ฟเวอร์ตัวที่ระบุข้างบน (ไม่ใช่ตัวอื่น) และ deploy เสร็จแล้ว'
+                        + (/\(404\)/.test(msg) ? '\n→ 404 = เซิร์ฟเวอร์ตัวนั้นยังเป็น index.js ตัวเก่า ยังไม่มีระบบเซิร์ฟเวอร์หลัก' : '')
+                        + '\n→ หรือเอาติ๊ก “ใช้กับผู้เล่นทุกคน” ออก เพื่อเปลี่ยนเฉพาะเครื่องนี้';
+                    showToast(msg, 'error');
                     return false;
                 }
             }
@@ -7395,6 +7393,15 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
             devSrvLoadRemote();
             devTestServerUrl();
             return true;
+        }
+        function devSrvAcctKey() {
+            try {
+                const pf = CardProfiles.current(); const tok = pf && pf.cloud && pf.cloud.token;
+                if (!tok) return '';
+                const b64 = tok.split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+                const o = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b64), c => c.charCodeAt(0))));
+                return o && o.k ? String(o.k) : '';
+            } catch (e) { return ''; }
         }
         function devSrvEveryone() { const c = document.getElementById('devSrvBroadcast'); return !c || c.checked; }
         async function devApplyServerUrl() {
@@ -7715,18 +7722,8 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
 
         // ===== แผงตั้งค่าเซิร์ฟเวอร์ (ปุ่มรูปโลก) — ใช้ได้ทุกคน สลับระหว่าง ไฟล์เกม / เซิร์ฟเวอร์ =====
         function renderServerPanel() {
-            const fileBtn = document.getElementById("serverModeFileBtn");
-            const srvBtn = document.getElementById("serverModeServerBtn");
-            if (!fileBtn || !srvBtn) return;
-            const isSrv = (typeof useServer === 'function') && useServer();
-            fileBtn.classList.toggle('active', !isSrv);
-            srvBtn.classList.toggle('active', isSrv);
             const info = document.getElementById("uiServerInfo");
-            if (info) {
-                info.textContent = isSrv
-                    ? 'โหมดปัจจุบัน: เซิร์ฟเวอร์ — ' + API_BASE
-                    : 'โหมดปัจจุบัน: ไฟล์เกม — รูปเก็บในไฟล์ HTML นี้ (โหมดเซิร์ฟเวอร์ใช้กับรูปการ์ด/ซอง/หน้ากล่อง/รางวัล)';
-            }
+            if (info) info.textContent = API_BASE;
         }
         async function testServerConnection(outId) {
             const out = document.getElementById(typeof outId === "string" ? outId : "uiServerTestResult");
