@@ -4012,9 +4012,11 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
     <script type="application/json" id="embedded-images-data">{"cardImages":{},"packImages":{},"gachaRewards":{},"boxFaces":{},"avatar":null}</script>
     <script>
         // ===== โหมดที่เก็บรูป: 'file' (ฝังในไฟล์ HTML) หรือ 'server' (ส่งขึ้นเซิร์ฟเวอร์กลาง ทุกคนเห็นเหมือนกัน) =====
-        const DEFAULT_API_BASE = "https://card-rng.onrender.com/api";   // ต้องมี /api ต่อท้ายเสมอ
+        const DEFAULT_API_BASE = "https://card-rng-drive.onrender.com/api";   // ต้องมี /api ต่อท้ายเสมอ
         let API_BASE = DEFAULT_API_BASE;
         let imageStoreMode = 'server';
+        // กู้คืนกรณีตั้ง URL ผิดแล้วเข้าเกมไม่ได้: เปิดหน้าเว็บโดยต่อท้าย ?resetserver เช่น https://.../?resetserver → กลับไปใช้เซิร์ฟเวอร์เริ่มต้น
+        try { if (/[?&#]resetserver/i.test(location.search + location.hash)) { localStorage.removeItem('imgApiBase'); history.replaceState(null, '', location.pathname); } } catch (e) {}
         try {
             API_BASE = localStorage.getItem('imgApiBase') || DEFAULT_API_BASE;
             imageStoreMode = localStorage.getItem('imgStoreMode') === 'file' ? 'file' : 'server';   // ค่าเริ่มต้น = เซิร์ฟเวอร์ (ถ้าไม่เคยเลือกโหมดไฟล์เกมเอง)
@@ -4027,6 +4029,10 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
 
         function setImageStoreMode(mode) {
             try { localStorage.setItem('imgStoreMode', mode === 'server' ? 'server' : 'file'); } catch (e) {}
+            location.reload();
+        }
+        function resetServerToDefault() {
+            try { localStorage.removeItem('imgApiBase'); } catch (e) {}
             location.reload();
         }
         function changeServerUrl() {
@@ -7348,6 +7354,15 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
             }
             try { if (typeof window.cardSyncNow === 'function') window.cardSyncNow().catch(function () {}); } catch (e) {}
         }
+        async function srvLooksValid(url, ms) {
+            const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), ms || 20000);
+            try {
+                const r = await fetch(url + '/gacha-rewards', { cache: 'no-store', signal: ctrl.signal });
+                if (!r.ok) return false;
+                const j = await r.json();
+                return !!j && typeof j === 'object';
+            } catch (e) { return false; } finally { clearTimeout(tm); }
+        }
         async function devSrvLoadRemote() {
             const el = document.getElementById('devSrvRemote'); if (!el) return;
             try {
@@ -7360,6 +7375,12 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
         // สลับเซิร์ฟเวอร์: ถ้า everyone = บันทึกลงเซิร์ฟเวอร์เดิมก่อน (ให้ผู้เล่นทุกคนตาม) แล้วค่อยสลับในเครื่องนี้ และล้างค่าบนเซิร์ฟเวอร์ใหม่กันวนกลับ
         async function devSwitchServer(url, everyone, okMsg) {
             const res = document.getElementById('devSrvResult');
+            if (res) res.textContent = 'กำลังเช็กว่าเซิร์ฟเวอร์ใหม่ตอบได้ ... (เซิร์ฟเวอร์ที่หลับอยู่อาจใช้เวลา 30-60 วินาที)';
+            if (!(await srvLooksValid(url, 70000))) {
+                if (res) res.textContent = '❌ ไม่เปลี่ยน: ' + url + ' ไม่ตอบเหมือนเซิร์ฟเวอร์ของเกม (404 / ไม่ใช่ JSON / ติดต่อไม่ได้) — เช็ก URL ให้ลงท้าย /api แล้วลองใหม่';
+                showToast('URL นี้ไม่ใช่เซิร์ฟเวอร์ของเกม — ยังไม่เปลี่ยน', 'error');
+                return false;
+            }
             if (everyone) {
                 if (res) res.textContent = 'กำลังบันทึกลงเซิร์ฟเวอร์ (มีผลกับผู้เล่นทุกคน) ...';
                 const ok = await srvCall('/server-config', 'PUT', { url: url });
@@ -7418,10 +7439,7 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
                 const url = devNormalizeApiUrl(j && j.url);
                 if (!url || url === API_BASE) return;
                 if (Date.now() - mainSrvLastFollow < 30000) return;   // กันสลับวนไปมา
-                const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), 20000);
-                let alive = false;
-                try { alive = (await fetch(url + '/gacha-rewards', { cache: 'no-store', signal: ctrl.signal })).ok; } catch (e) {} finally { clearTimeout(tm); }
-                if (!alive) return;   // เซิร์ฟเวอร์ใหม่ยังตอบไม่ได้ → อยู่ที่เดิมก่อน แล้วลองใหม่รอบหน้า
+                if (!(await srvLooksValid(url, 20000))) return;   // เซิร์ฟเวอร์ใหม่ยังตอบไม่ได้ → อยู่ที่เดิมก่อน แล้วลองใหม่รอบหน้า
                 mainSrvLastFollow = Date.now();
                 devSetServerUrl(url);
                 try { showToast('ย้ายไปใช้เซิร์ฟเวอร์หลักใหม่แล้ว', 'success'); } catch (e) {}
@@ -12110,6 +12128,9 @@ window.__raid = { get S() { return S; }, newBattle, startBattle, showLobby, get 
                 <button class="auth-btn" id="authReg">สมัคร</button>
             </div>
             <div class="auth-msg" id="authMsg"></div>
+            <div style="text-align:center; margin-top:10px;">
+                <button type="button" onclick="resetServerToDefault()" style="background:none; border:none; color:#888; font-size:11px; text-decoration:underline; cursor:pointer;">🔧 เข้าไม่ได้? รีเซ็ตเซิร์ฟเวอร์เป็นค่าเริ่มต้น</button>
+            </div>
         </div>
         <div class="auth-card" id="authRegCard" style="display:none;">
             <h1>สมัคร ID</h1>
